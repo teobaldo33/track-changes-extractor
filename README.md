@@ -51,13 +51,19 @@ $env:OPENAI_API_KEY="your_api_key"
 To extract revisions from a Microsoft Word file, run:
 
 ```bash
-bun run src/extract path_to_your_file.docx
+bun extract path_to_your_file.docx
 ```
 
 To generate the corrections dataset from the grouped revisions file, run:
 
 ```bash
-bun run src/dataset
+bun dataset
+```
+
+To classify the dataset with then OpenAI API
+
+```bash
+bun classify
 ```
 
 Generated files will be saved in the `outputs` folder. 📂
