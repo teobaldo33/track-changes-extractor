@@ -1,20 +1,15 @@
-import * as fsSync from "fs"; // pour les opérations synchrones
-import { promises as fs } from "fs"; // pour les opérations asynchrones
+import * as fsSync from "fs"; // for synchronous operations
+import { promises as fs } from "fs"; // for asynchronous operations
 import * as xml2js from "xml2js";
 import JSZip from "jszip";
 import * as path from "path";
+import type { Entry, Paragraph } from "./types";
 
-interface Entry {
-  type: "text" | "insertion" | "deletion";
-  content: string;
-  author?: string;
-  date?: string;
-}
-
-interface Paragraph {
-  entries: Entry[];
-}
-
+/**
+ * Extracts and returns the text content from an XML element.
+ * @param item - The XML element.
+ * @returns {string} The extracted text.
+ */
 function extractText(item: any): string {
   if (typeof item === "string") return item;
   if (typeof item === "object" && item._ !== undefined) return item._;
@@ -22,6 +17,11 @@ function extractText(item: any): string {
   return "";
 }
 
+/**
+ * Merges adjacent text entries.
+ * @param entries - Array of Entry.
+ * @returns {Entry[]} Merged entries.
+ */
 function mergeTextEntries(entries: Entry[]): Entry[] {
   const merged: Entry[] = [];
   for (const entry of entries) {
@@ -38,6 +38,11 @@ function mergeTextEntries(entries: Entry[]): Entry[] {
   return merged;
 }
 
+/**
+ * Extracts an Entry from the given XML node.
+ * @param child - XML node.
+ * @returns {Entry | null} The extracted entry or null.
+ */
 function extractEntry(child: any): Entry | null {
   let author = child.$ && child.$["w:author"] ? child.$["w:author"] : "";
   let date = child.$ && child.$["w:date"] ? child.$["w:date"] : "";
@@ -95,6 +100,11 @@ function extractEntry(child: any): Entry | null {
   return null;
 }
 
+/**
+ * Gets the XML content from a file.
+ * @param inputPath - Path to the input file.
+ * @returns {Promise<string>} The XML content.
+ */
 async function getXMLContent(inputPath: string): Promise<string> {
   if (inputPath.toLowerCase().endsWith(".docx")) {
     const data = await fs.readFile(inputPath);
@@ -109,6 +119,11 @@ async function getXMLContent(inputPath: string): Promise<string> {
   }
 }
 
+/**
+ * Parses the XML content into an array of Paragraphs.
+ * @param xmlContent - The XML content.
+ * @returns {Promise<Paragraph[]>} Array of Paragraphs.
+ */
 async function parseXMLContent(xmlContent: string): Promise<Paragraph[]> {
   const parser = new xml2js.Parser({
     explicitChildren: true,
@@ -131,11 +146,22 @@ async function parseXMLContent(xmlContent: string): Promise<Paragraph[]> {
   return paragraphs;
 }
 
+/**
+ * Saves the paragraphs into a JSON file.
+ * @param paragraphs - Array of Paragraph.
+ * @param outputPath - Path to the output file.
+ * @returns {Promise<void>}
+ */
 async function saveParagraphs(paragraphs: Paragraph[], outputPath: string): Promise<void> {
   await fs.writeFile(outputPath, JSON.stringify(paragraphs, null, 2), "utf-8");
   console.log("Grouped revisions saved in " + outputPath);
 }
 
+/**
+ * Reads and prints the paragraphs from a JSON file.
+ * @param jsonPath - Path to the JSON file.
+ * @returns {Promise<void>}
+ */
 async function printParagraphsFromFile(jsonPath: string): Promise<void> {
   const data = await fs.readFile(jsonPath, "utf-8");
   const paragraphs: Paragraph[] = JSON.parse(data);
