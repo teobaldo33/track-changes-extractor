@@ -4,7 +4,9 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "start": "bun run src/index.ts"
+    "extract": "bun run src/extract.ts",
+    "dataset": "bun run src/dataset.ts",
+    "classify": "bun run src/classify.ts"
   },
   "dependencies": {
     "jszip": "3.10.1",

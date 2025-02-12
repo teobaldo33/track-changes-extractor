@@ -14,8 +14,6 @@ interface Group {
 
 interface Segment {
     kind: "text" | "change";
-    // Pour "text": content est le fragment textuel complet.
-    // Pour "change": content est l'entrée de changement.
     content: string | Entry;
 }
 
@@ -35,11 +33,6 @@ function buildSegments(entries: Entry[]): Segment[] {
     return segments;
 }
 
-/**
- * Regroupe les changements consécutifs.
- * Pour la version "original", on concatène les contenus en deletion.
- * Pour la version "correction", on concatène les contenus en insertion.
- */
 function processChangeGroup(changeGroup: Entry[]): { originalChange: string; correctionChange: string } {
     let originalChange = "";
     let correctionChange = "";
@@ -53,13 +46,11 @@ function processChangeGroup(changeGroup: Entry[]): { originalChange: string; cor
     return { originalChange, correctionChange };
 }
 
-// Extrait les 4 derniers mots du texte
 function extractTailWords(text: string, count: number = 4): string {
     const words = text.split(/\s+/);
     return words.slice(Math.max(words.length - count, 0)).join(" ");
 }
 
-// Extrait les 4 premiers mots du texte
 function extractHeadWords(text: string, count: number = 4): string {
     const words = text.split(/\s+/);
     return words.slice(0, count).join(" ");
@@ -72,13 +63,11 @@ function processGroup(entries: Entry[]): { original: string; correction: string 
     let i = 0;
     while (i < segments.length) {
         if (segments[i].kind === "change") {
-            // Récupération de tous les changements consécutifs.
             const changeGroup: Entry[] = [];
             while (i < segments.length && segments[i].kind === "change") {
                 changeGroup.push(segments[i].content as Entry);
                 i++;
             }
-            // Identifier le segment textuel précédent et suivant (s'ils existent).
             const prevText = (i - changeGroup.length - 1) >= 0 && segments[i - changeGroup.length - 1].kind === "text"
                 ? segments[i - changeGroup.length - 1].content as string
                 : "";
@@ -88,7 +77,6 @@ function processGroup(entries: Entry[]): { original: string; correction: string 
             
             const { originalChange, correctionChange } = processChangeGroup(changeGroup);
 
-            // Extraire 4 mots de contexte avant et après la zone d'erreur.
             const contextPrev = extractTailWords(prevText);
             const contextNext = extractHeadWords(nextText);
             
@@ -108,8 +96,14 @@ function processGroup(entries: Entry[]): { original: string; correction: string 
 }
 
 function main() {
-    const inputFile = path.join(__dirname, "revisions_grouped.json");
-    const outputFile = path.join(__dirname, "dataset.jsonl");
+    const outputDir = path.join(__dirname, '../outputs');
+    // Créer le dossier outputs s'il n'existe pas
+    if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir, { recursive: true });
+    }
+
+    const inputFile = path.join(outputDir, "revisions_grouped.json");
+    const outputFile = path.join(outputDir, "dataset.jsonl");
 
     const rawData = fs.readFileSync(inputFile, { encoding: "utf8" });
     let groups: Group[];
@@ -125,7 +119,6 @@ function main() {
         if (group.entries && group.entries.length > 0) {
             const changes = processGroup(group.entries);
             for (const change of changes) {
-                // Garder uniquement les corrections non vides.
                 if (change.original || change.correction) {
                     dataset.push(change);
                 }

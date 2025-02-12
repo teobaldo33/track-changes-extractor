@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as fsSync from "fs"; // pour les opérations synchrones
 import OpenAI from "openai";
 import * as path from "path";
 
@@ -10,18 +11,18 @@ interface CorrectionItem {
     explanation?: string;
 }
 
-const DATASET_FILE = path.join(__dirname, "dataset.jsonl");
-const OUTPUT_FILE = path.join(__dirname, "dataset_classified.jsonl");
+const outputDir = path.join(__dirname, '../outputs');
 
-// // Configure OpenAI avec la clé API (assurez-vous de la définir dans votre environnement)
-// const configuration = new Configuration({
-//     apiKey: process.env.OPENAI_API_KEY,
-// });
+// Utiliser fsSync pour les méthodes synchrones
+if (!fsSync.existsSync(outputDir)) {
+    fsSync.mkdirSync(outputDir, { recursive: true });
+}
+
+const DATASET_FILE = path.join(outputDir, "dataset.jsonl");
+const OUTPUT_FILE = path.join(outputDir, "dataset_classified.jsonl");
+
 const openai = new OpenAI();
 
-/**
- * Construit le prompt pour OpenAI en demandant strictement une réponse JSON.
- */
 function buildPrompt(original: string, correction: string): string {
     return `Compare the following two texts and determine what changes have been made and why. Focus only on the differences between the "Original" and "Corrected" texts, then select one error type from the list below and provide a brief explanation.
 
@@ -55,9 +56,6 @@ Output JSON: {"error_type": "Grammar (auxiliary)", "explanation": "The correctio
 Now, please produce the JSON object for the provided texts.`;
 }
 
-/**
- * Utilise l'API OpenAI pour classifier une correction.
- */
 async function classifyCorrection(original: string, correction: string): Promise<{ error_type: string; explanation: string }> {
     const prompt = buildPrompt(original, correction);
     try {
@@ -72,7 +70,6 @@ async function classifyCorrection(original: string, correction: string): Promise
             ],
         });
         const output = response.choices[0].message.content;
-        // Tentative de trouver une portion JSON dans la réponse.
         const jsonStart = output?.indexOf('{') ?? -1;
         const jsonEnd = output?.lastIndexOf('}') ?? -1;
         if (jsonStart === -1 || jsonEnd === -1) {
