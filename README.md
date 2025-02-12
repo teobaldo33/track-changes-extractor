@@ -14,7 +14,26 @@ A powerful tool to extract and process revisions from Microsoft Word documents, 
 
 ## Overview 🔍
 
-Track Changes Extractor parses `.docx` files to extract revisions (insertions and deletions) and groups them by paragraph. The result is saved as JSON, ready for analysis or training purposes. 💡
+Track Changes Extractor parses `.docx` files to extract revisions (insertions and deletions) and groups them by paragraph.
+It then creates a dataset with this format : 
+
+```json
+{
+	"original":"È il punto crittico delle donne, di",
+	"correction":"È il punto critico delle donne, di"
+}
+```
+
+Finally it classifies the corrections : 
+```json
+{
+	"original":"È il punto crittico delle donne, di",
+	"corrected":"È il punto critico delle donne, di",
+	"error_type":"Spelling",
+	"explanation":"The correction fixes the misspelling of 'critico', which was originally written as 'crittico' with an extra 't'."
+}
+```
+
 
 ## Installation 💻
 
