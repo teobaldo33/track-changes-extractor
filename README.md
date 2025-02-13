@@ -1,6 +1,6 @@
 # Track Changes Extractor 🚀
 
-A powerful tool to extract and process revisions from Microsoft Word documents, designed to build a high-quality dataset for fine-tuning language models. ✨
+A little tool to extract and process revisions from Microsoft Word documents, designed to build a dataset for fine-tuning language models. ✨
 
 ## Table of Contents 📚
 
